@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC-Mobile Tools</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { text-align: center; background-color: white; padding: 3rem 4rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #1c1e21; margin-bottom: 2rem; }
+        .tool-link { display: block; background-color: #1877f2; color: white; text-decoration: none; padding: 1rem 2rem; margin-top: 1rem; border-radius: 8px; font-size: 1.2rem; font-weight: bold; transition: background-color 0.2s; }
+        .tool-link:hover { background-color: #166fe5; }
+        .flash-error { margin-top: 1rem; padding: 1rem; border-radius: 8px; font-weight: 500; background-color: #fde_e0; color: #9c3c38; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PC-Mobile Tools</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <a href="{{ url_for('files_page') }}" class="tool-link">File Transfer</a>
+        <a href="{{ url_for('clipboard_page') }}" class="tool-link">Shared Clipboard</a>
+    </div>
+</body>
+</html>

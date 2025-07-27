@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Transfer</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: #1c1e21; padding: 1rem 0; }
+        .container { background-color: #ffffff; padding: 0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; max-width: 420px; width: 90%; overflow: hidden; }
+        .tab-buttons { display: flex; border-bottom: 1px solid #ddd; }
+        .tab-button { flex-grow: 1; padding: 1rem; background: none; border: none; cursor: pointer; font-size: 1rem; font-weight: 600; color: #606770; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.2s; }
+        .tab-button.active { color: #1877f2; border-bottom-color: #1877f2; }
+        .content-area { padding: 1.5rem 2rem 2rem 2rem; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        form { display: flex; flex-direction: column; gap: 1.5rem; }
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; padding: 12px 20px; border: 2px dashed #ccd0d5; border-radius: 8px; transition: background-color 0.2s, border-color 0.2s; }
+        .file-input-wrapper:hover { background-color: #f7f8fa; border-color: #8a94a3; }
+        input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .file-input-label { font-weight: 500; }
+        #file-name { margin-top: 10px; font-style: italic; color: #606770; }
+        button { background-color: #1877f2; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #166fe5; }
+        .flash-message { margin-bottom: 1rem; padding: 1rem; border-radius: 8px; font-weight: 500; }
+        .flash-success { background-color: #e9f6ec; color: #3f7d51; }
+        .flash-error { background-color: #fdeae0; color: #9c3c38; }
+        #download-list { list-style: none; padding: 0; text-align: left; max-height: 300px; overflow-y: auto;}
+        #download-list li { background-color: #f7f8fa; padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; }
+        #download-list a { text-decoration: none; color: #1c1e21; font-weight: 500; }
+        #download-list a:hover { text-decoration: underline; }
+        .no-files { color: #606770; }
+        .home-link { display: block; margin-top: 2rem; color: #606770; text-decoration: none; font-weight: 500;}
+        .home-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab(event, 'upload')">Upload to PC</button>
+            <button class="tab-button" onclick="showTab(event, 'download')">Download from PC</button>
+        </div>
+
+        <div class="content-area">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div id="upload-tab" class="tab-content active">
+                <form method="post" action="/upload" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <span class="file-input-label">Click to select a file</span>
+                        <input type="file" name="file" id="fileInput" onchange="updateFileName()">
+                    </div>
+                    <div id="file-name">No file chosen</div>
+                    <button type="submit">Upload File</button>
+                </form>
+            </div>
+
+            <div id="download-tab" class="tab-content">
+                <ul id="download-list">
+                    {% if downloadable_files %}
+                        {% for file in downloadable_files %}
+                            <li><a href="{{ url_for('download_file', filename=file) }}">{{ file }}</a></li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="no-files">No files available to download.</li>
+                    {% endif %}
+                </ul>
+                <button onclick="location.reload()">Refresh List</button>
+            </div>
+             <a href="{{ url_for('home') }}" class="home-link">← Back to Home</a>
+        </div>
+    </div>
+    <script>
+        function showTab(evt, tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + '-tab').style.display = 'block';
+            evt.currentTarget.classList.add('active');
+        }
+        function updateFileName() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('file-name');
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const activeButton = document.querySelector('.tab-button.active');
+            if (activeButton) {
+                activeButton.click();
+            }
+        });
+    </script>
+</body>
+</html>

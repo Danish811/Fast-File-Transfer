@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Clipboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; margin: 0; padding: 1rem; display: flex; flex-direction: column; height: calc(100vh - 2rem); }
+        h1 { text-align: center; color: #1c1e21; }
+        #clipboard-area {
+            flex-grow: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccd0d5;
+            box-sizing: border-box;
+            resize: none;
+        }
+        #status { text-align: center; margin-top: 1rem; color: #606770; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Shared Clipboard</h1>
+    <textarea id="clipboard-area" placeholder="Type or paste here..."></textarea>
+    <div id="status">Connecting...</div>
+
+    <!-- Firebase SDK - Notice the change to firebase-database.js -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = JSON.parse('{{ firebase_config | tojson | safe }}');
+        const clipboardArea = document.getElementById('clipboard-area');
+        const statusDiv = document.getElementById('status');
+
+        try {
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            const dbRef = database.ref('clipboard/sharedText');
+
+            // --- LISTEN FOR REMOTE CHANGES ---
+            dbRef.on('value', (snapshot) => {
+                statusDiv.textContent = 'Connected';
+                const remoteText = snapshot.val();
+                if (clipboardArea.value !== remoteText) {
+                    clipboardArea.value = remoteText || '';
+                }
+            }, (error) => {
+                console.error("Error listening to database: ", error);
+                statusDiv.textContent = 'Connection error!';
+            });
+
+            // --- SEND LOCAL CHANGES ---
+            clipboardArea.addEventListener('input', () => {
+                // Send the new content to the Realtime Database
+                dbRef.set(clipboardArea.value)
+                .catch((error) => {
+                    console.error("Error writing to database: ", error);
+                    statusDiv.textContent = 'Error saving!';
+                });
+            });
+
+        } catch (e) {
+            console.error("Firebase initialization failed: ", e);
+            statusDiv.textContent = 'Firebase configuration is missing or invalid.';
+            clipboardArea.disabled = true;
+        }
+    </script>
+</body>
+</html>
